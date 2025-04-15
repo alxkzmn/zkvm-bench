@@ -59,11 +59,24 @@ fn main() {
         // Setup the program for proving.
         let (pk, vk) = client.setup(SHA_ELF);
 
+        println!("ELF size: {} KB", pk.elf.len() as f32 / 1024.0);
+        let pk_bytes = bincode::serialize(&pk).unwrap();
+        println!(
+            "Proving key size: {} MB",
+            pk_bytes.len() as f32 / (1024.0 * 1024.0)
+        );
+
         // Generate the proof
         let proof = client
             .prove(&pk, &stdin)
             .run()
             .expect("failed to generate proof");
+
+        let proof_bytes = bincode::serialize(&proof).unwrap();
+        println!(
+            "Proof size: {} MB",
+            proof_bytes.len() as f32 / (1024.0 * 1024.0)
+        );
 
         println!("Successfully generated proof!");
 
