@@ -8,16 +8,21 @@ default-run = "sha"
 name = "sha"
 path = "src/bin/main.rs"
 
-
 [dependencies]
-sp1-sdk = "3.0.0"
+sp1-sdk = { version = "4.1.7", default-features = false }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0.200", default-features = false, features = ["derive"] }
 clap = { version = "4.0", features = ["derive", "env"] }
 tracing = "0.1.40"
-hex = "0.4.3"
-alloy-sol-types = { workspace = true }
 sha-lib = { path = "../lib" }
+criterion = "0.5.1"
 
 [build-dependencies]
-sp1-helper = "3.0.0"
+sp1-helper = "4.1.7"
+
+[profile.bench]
+opt-level = 3
+
+[[bench]]
+name = "prove_verify"
+harness = false

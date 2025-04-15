@@ -1,13 +1,4 @@
-use alloy_sol_types::sol;
-use sha2::{Sha256, Digest};
-
-sol! {
-    /// The public values encoded as a struct that can be easily deserialized inside Solidity.
-    struct PublicValuesStruct {
-        uint32 n;
-        uint32 a;
-    }
-}
+use sha2::{Digest, Sha256};
 
 pub fn sha2(input: &[u8]) -> u32 {
     let mut hasher = Sha256::new();
