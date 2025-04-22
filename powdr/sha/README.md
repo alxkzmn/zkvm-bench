@@ -24,6 +24,12 @@ This will run the host and generate ZK proofs.
 cargo run -r
 ```
 
+## Benchmarking
+
+```
+cargo bench
+```
+
 ## AVX / Neon
 
 You can enable AVX or Neon support by using the `simd` feature and running
@@ -36,12 +42,12 @@ RUSTFLAGS='-C target-cpu=native' cargo run --features simd -r
 ## Structure
 
 - `src/main.rs`: the host code. This is where you create a powdr `Session`,
-prepare data to be shared with the guest, and run the prover.
+  prepare data to be shared with the guest, and run the prover.
 - `guest`: this is the guest crate. It contains the code that will be
-run inside the powdrVM.
+  run inside the powdrVM.
 - `powdr-target`: this is where all generated artifacts reside.
-This includes the compiled guest code to powdr-asm, the compiled PIL constraints,
-setup artifacts such as proving and verifying keys, and the final ZK proofs.
+  This includes the compiled guest code to powdr-asm, the compiled PIL constraints,
+  setup artifacts such as proving and verifying keys, and the final ZK proofs.
 
 ## Workflow
 
