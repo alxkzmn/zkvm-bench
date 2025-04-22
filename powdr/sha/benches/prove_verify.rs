@@ -59,8 +59,8 @@ fn prove(pipeline: &mut powdr::Pipeline<powdr::GoldilocksField>) {
 
     let generate_proof = |pipeline: &mut Pipeline<GoldilocksField>| -> Result<(), Vec<String>> {
         pipeline.compute_witness()?;
-        pipeline.compute_proof().unwrap();
-
+        //let proof = pipeline.compute_proof().unwrap();
+        //println!("Proof size: {} MB", proof.len() as f64 / 1024.0 / 1024.0);
         Ok(())
     };
 
