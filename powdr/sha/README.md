@@ -30,6 +30,12 @@ cargo run -r
 cargo bench
 ```
 
+Measure RAM footprint:
+
+```
+cargo run -r --bin measure
+```
+
 ## AVX / Neon
 
 You can enable AVX or Neon support by using the `simd` feature and running
