@@ -5,7 +5,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use powdr::{riscv, GoldilocksField, Pipeline, Session};
+use powdr::{
+    number::{KnownField, Mersenne31Field},
+    riscv::{self, CompilerOptions, RuntimeLibs},
+    Pipeline,
+};
 
 fn pil_file_path(asm_name: &Path) -> PathBuf {
     let file_stem = asm_name.file_stem().unwrap().to_str().unwrap();
@@ -13,14 +17,17 @@ fn pil_file_path(asm_name: &Path) -> PathBuf {
     asm_name.with_file_name(opt_file_stem).with_extension("pil")
 }
 
-pub fn prepare_pipeline() -> powdr::Pipeline<powdr::GoldilocksField> {
-    let session = Session::builder()
-        .guest_path("./guest")
-        .out_path("powdr-target")
-        .chunk_size_log2(18)
-        .build();
+pub fn prepare_pipeline() -> powdr::Pipeline<Mersenne31Field> {
+    let out_path = Path::new("powdr-target");
 
-    let mut pipeline = session.into_pipeline();
+    // Build the guest program and get the assembly code
+    let (asm_file_path, asm_contents) = build_guest("./guest", out_path, 5, 18, RuntimeLibs::new());
+
+    // Create a pipeline from the asm program
+    let mut pipeline = Pipeline::<Mersenne31Field>::default()
+        .from_asm_string(asm_contents.clone(), Some(asm_file_path.clone()))
+        .with_backend(powdr::backend::BackendType::Stwo, None)
+        .with_output(out_path.into(), true);
 
     let asm_name = pipeline.asm_string().unwrap().0.clone().unwrap();
     let pil_file = pil_file_path(&asm_name);
@@ -74,7 +81,22 @@ pub fn prepare_pipeline() -> powdr::Pipeline<powdr::GoldilocksField> {
     pipeline
 }
 
-fn export_setup(pipeline: &mut powdr::Pipeline<powdr::GoldilocksField>) {
+pub fn build_guest(
+    guest_path: &str,
+    out_path: &Path,
+    min_degree_log: u8,
+    max_degree_log: u8,
+    precompiles: RuntimeLibs,
+) -> (PathBuf, String) {
+    let options = CompilerOptions::new(KnownField::Mersenne31Field, precompiles, false)
+        .with_min_degree_log(min_degree_log)
+        .with_max_degree_log(max_degree_log);
+    riscv::compile_rust(guest_path, options, out_path, true, None)
+        .ok_or_else(|| vec!["could not compile rust".to_string()])
+        .unwrap()
+}
+
+fn export_setup<F: powdr::FieldElement>(pipeline: &mut powdr::Pipeline<F>) {
     let mut path = PathBuf::from("powdr-target");
     path.push("pkey.bin");
     let file = File::create(path).unwrap();
@@ -88,11 +110,11 @@ fn export_setup(pipeline: &mut powdr::Pipeline<powdr::GoldilocksField>) {
     pipeline.export_verification_key(file).unwrap();
 }
 
-pub fn prove(pipeline: &mut powdr::Pipeline<powdr::GoldilocksField>) {
+pub fn prove<F: powdr::FieldElement>(pipeline: &mut powdr::Pipeline<F>) {
     let bootloader_inputs =
         riscv::continuations::rust_continuations_dry_run(&mut pipeline.clone(), None);
 
-    let generate_proof = |pipeline: &mut Pipeline<GoldilocksField>| -> Result<(), Vec<String>> {
+    let generate_proof = |pipeline: &mut Pipeline<F>| -> Result<(), Vec<String>> {
         pipeline.compute_witness()?;
         let proof = pipeline.compute_proof().unwrap();
         //println!("Proof size: {} MB", proof.len() as f64 / 1024.0 / 1024.0);
@@ -104,9 +126,9 @@ pub fn prove(pipeline: &mut powdr::Pipeline<powdr::GoldilocksField>) {
     riscv::continuations::rust_continuations(pipeline, generate_proof, bootloader_inputs).unwrap();
 }
 
-pub fn verify(mut pipeline: powdr::Pipeline<GoldilocksField>) {
+pub fn verify<F: powdr::FieldElement>(mut pipeline: powdr::Pipeline<F>) {
     let proof = pipeline.proof().unwrap().clone();
-    let publics: Vec<GoldilocksField> = pipeline
+    let publics: Vec<F> = pipeline
         .publics()
         .unwrap()
         .iter()

@@ -5,12 +5,10 @@ edition = "2021"
 
 [features]
 default = []
-simd = ["powdr/plonky3-simd"]
+#simd = ["powdr/plonky3-simd"]
 
 [dependencies]
-#rev = "f02fd626e2bb9e46a22ea1cda96b4feb5c6bda43"
-#powdr = { git = "https://github.com/powdr-labs/powdr", tag = "v0.1.3", features = ["plonky3-simd"] }
-powdr = { path = "./../../../powdr/powdr", features = ["plonky3"] }
+powdr = { git = "https://github.com/powdr-labs/powdr", tag = "v0.1.3", features = ["stwo"] }
 
 serde = { version = "1.0", default-features = false, features = [
   "alloc",
